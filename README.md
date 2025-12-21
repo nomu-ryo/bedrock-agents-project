@@ -6,8 +6,8 @@
 
 本プロジェクトの設計思想、アーキテクチャの詳細は以下の記事をご参照ください。
 
-* **前編**: [Amazon Bedrock Agentによる自律型ワークフローの構築と視覚的バリデーション](https://www.google.com/search?q=https://example.com/article-part1)
-* **後編**: [Step Functions を用いた Human-in-the-loop な自動デプロイの実装](https://www.google.com/search?q=https://example.com/article-part2)
+* **前編**: [Amazon Bedrock Agentによる自律型ワークフローの構築と視覚的バリデーション](https://www.google.com/search?q=https://example.com/article-part1)※記事公開後に編集します
+* **後編**: [Step Functions を用いた Human-in-the-loop な自動デプロイの実装](https://www.google.com/search?q=https://example.com/article-part2)※記事公開後に編集します
 
 ---
 
@@ -30,27 +30,32 @@
 
 ```text
 .
-├── lambda/                 # 各フェーズで実行される AWS Lambda 関数
-│   ├── br*.py / .js        # Bedrock Agent 連携用 (Excel抽出、Mermaid描画)
-│   ├── sf*.py / .js        # Step Functions ワークフロー制御用
-│   ├── br*.py / .js        # Bedrock Agent 連携用 (Excel抽出、Mermaid描画)
-│   ├── sf*.py / .js        # Step Functions ワークフロー制御用
-│   ├── sf*.py / .js        # Step Functions ワークフロー制御用
-│   ├── br*.py / .js        # Bedrock Agent 連携用 (Excel抽出、Mermaid描画)
-│   ├── sf*.py / .js        # Step Functions ワークフロー制御用
-│   └── tg*.py              # TGWリソース走査・マッピング生成用
-├── APIschema/              # Bedrock Agent アクショングループ定義
-│   ├── br1_apischema.yml   # TGW設定抽出 (Excel to JSONL)
-│   ├── br4_apischema.yml   # Mermaidレンダリング (YAML to PNG)
-│   ├── br1_apischema.yml   # TGW設定抽出 (Excel to JSONL)
-│   └── br4_apischema.yml   # Mermaidレンダリング (YAML to PNG)
+├── lambda/                           # 各フェーズで実行される AWS Lambda 関数
+│   ├── br1_lambda_function.py        # Bedrock Agent 連携用 (Excel抽出)
+│   ├── br2_lambda_function.py        # Bedrock Agent 連携用 (YAML生成)
+│   ├── br3_lambda_function.py        # Bedrock Agent 連携用 (Mermaid変換)
+│   ├── br4_lambda_function.js        # Bedrock Agent 連携用 (Mermaid描画)
+│   ├── sf1_lambda_function.py        # Step Functions ワークフロー制御用（S3一時認証キー作成）
+│   ├── sf2_lambda_function.py        # Step Functions ワークフロー制御用（SNSによるメール送付）
+│   ├── sf3_lambda_function.py        # Step Functions ワークフロー制御用（短縮idによるリダイレクト）
+│   ├── sf4_lambda_function.js        # Step Functions ワークフロー制御用（承認リンクのリダイレクト）
+│   ├── sf5_lambda_function.js        # Step Functions ワークフロー制御用（二段階承認後、情報を受け渡し）
+│   ├── sf6_lambda_function.js        # Step Functions ワークフロー制御用（否認時のワークフロー終了）
+│   ├── sf7_lambda_function.py        # Step Functions ワークフロー制御用（Cfnへのデプロイ）
+│   ├── tg1_lambda_function.py        # TGWリソース走査・マッピング生成用（情報取得）
+│   └── tg2_lambda_function.py        # TGWリソース走査・マッピング生成用（リソースインポート実行）
+├── APIschema/                        # Bedrock Agent アクショングループ定義
+│   ├── br1_apischema.yml             # TGW設定抽出 (Excel to JSONL)
+│   ├── br4_apischema.yml             # Mermaidレンダリング (YAML to PNG)
+│   ├── br1_apischema.yml             # TGW設定抽出 (Excel to JSONL)
+│   └── br4_apischema.yml             # Mermaidレンダリング (YAML to PNG)
 └── README.md
 
 ```
 
 ## 🛠 主要コンポーネント詳細
 
-### 1. TGW設定抽出 (Lambda: `br1`, `tg1`)
+### 1. TGW設定抽出 (Lambda: `br1`, `br2`)
 
 Excel設計書から特定のパラメータを抽出し、一意のルートテーブル名を採番して構造化データを生成します。
 
