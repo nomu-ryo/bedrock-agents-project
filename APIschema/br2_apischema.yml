@@ -1,0 +1,71 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "TGW Make YAML Action Group",
+    "version": "1.0"
+  },
+  "paths": {
+    "/makingYamlFile": {
+      "post": {
+        "operationId": "makingYamlFile",
+        "summary": "TGW設定データを使用して、CloudFormation YAML設定ファイルを動的に生成しS3に保存する。",
+        "description": "前のステップでS3に保存されたTGW設定データ（JSONL形式）を読み込み、動的に決定されたパスにCloudFormation YAMLファイルを生成しS3に保存します。保存先のパスは dynamic_prefix に基づいて構成されます。",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "s3_config_key": {
+                    "type": "string",
+                    "description": "TGW設定データ（JSONL）が保存されたS3バケットとキーのフルパス。"
+                  },
+                  "dynamic_prefix": {
+                    "type": "string",
+                    "description": "YAMLファイルを保存するS3パスの動的なフォルダ名（例: experiment）。前の抽出ステップで使われた値をそのまま引き継いでください。"
+                  },
+                  "yaml_file_name": {
+                    "type": "string",
+                    "description": "S3に保存するCloudFormation YAMLのファイル名（例: tgw-routing.yaml）。",
+                    "default": "tgw_routing_config.yaml"
+                  },
+                  "yaml_bucket": {
+                    "type": "string",
+                    "description": "生成されたYAMLファイルを保存するS3バケット名。",
+                    "default": "transitgateway-automation-rag"
+                  }
+                },
+                "required": [
+                  "s3_config_key",
+                  "dynamic_prefix"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "YAML設定ファイルが正常に生成され、S3に保存されたことを示す応答。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "response": {
+                      "type": "string",
+                      "description": "YAMLファイル生成結果の概要メッセージ。"
+                    }
+                  },
+                  "required": [
+                    "response"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

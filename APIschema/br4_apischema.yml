@@ -1,0 +1,105 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "MermaidRendererAndNotifier",
+    "version": "1.0.0",
+    "description": "S3に保存されたMermaid定義をPNGとしてレンダリングし、結果をS3に保存した後、Step Functionsを起動して通知するAWS Lambda関数です。"
+  },
+  "paths": {
+    "/render-diagram": {
+      "post": {
+        "operationId": "renderMermaidDiagramAndNotify",
+        "summary": "Mermaid定義のレンダリング、S3保存、および通知Step Functionsの起動",
+        "description": "S3上のMarkdownファイルからMermaid定義を抽出し、フルダイアグラムと差分ダイアグラム（オプション）の両方をPNG画像としてレンダリングした後、結果をS3にアップロードし、後続の通知処理のためにStep Functionsを起動します。",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "inputBucket",
+                  "inputKey",
+                  "outputBucket",
+                  "outputKey"
+                ],
+                "properties": {
+                  "inputBucket": {
+                    "type": "string",
+                    "description": "【必須】フルダイアグラムのMermaid定義を含むMarkdownファイルが保存されているS3バケット名。通常はLambda3のoutputBucketと同じ。"
+                  },
+                  "inputKey": {
+                    "type": "string",
+                    "description": "【必須】フルダイアグラムのMermaid定義を含むMarkdownファイルのS3キー（パス）。（Lambda3の応答: inputKey）"
+                  },
+                  "outputBucket": {
+                    "type": "string",
+                    "description": "【必須】レンダリングされたフルダイアグラムのPNG画像を保存するS3バケット名。"
+                  },
+                  "outputKey": {
+                    "type": "string",
+                    "description": "【必須】レンダリングされたフルダイアグラムのPNG画像を保存するS3キー（パス）。通常は .png 拡張子を持ちます。"
+                  },
+                  "diffInputKey": {
+                    "type": "string",
+                    "description": "【オプション】差分ダイアグラムのMermaid定義を含むMarkdownファイルのS3キー（パス）。（Lambda3の応答: diffInputKey）"
+                  },
+                  "diffOutputKey": {
+                    "type": "string",
+                    "description": "【オプション】レンダリングされた差分ダイアグラムのPNG画像を保存するS3キー（パス）。diffInputKeyが指定された場合に使用されます。"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "レンダリング、アップロード、およびStep Functionsの起動が成功した際の応答。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "description": "処理結果のメッセージ。"
+                    },
+                    "fullOutputUrl": {
+                      "type": "string",
+                      "description": "アップロードされたフルダイアグラムPNGファイルのS3 URL (s3://bucket/key 形式)。"
+                    },
+                    "diffOutputUrl": {
+                      "type": "string",
+                      "description": "アップロードされた差分ダイアグラムPNGファイルのS3 URL (s3://bucket/key 形式)。差分がない場合は省略されます。"
+                    },
+                    "executionArn": {
+                      "type": "string",
+                      "description": "起動されたStep Functions実行のARN。"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "処理中にエラーが発生した際の応答。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "エラーメッセージ。"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

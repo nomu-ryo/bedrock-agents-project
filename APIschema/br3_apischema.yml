@@ -1,0 +1,82 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "TGW Mermaid Generator",
+    "version": "1.0",
+    "description": "CloudFormation YAMLを解析し、TGWルーティングのMermaidコードを生成する操作を提供します。"
+  },
+  "paths": {
+    "/generateMermaidDiagram": {
+      "post": {
+        "operationId": "generateMermaidDiagram",
+        "summary": "CFn YAMLを解析し、TGW疎通図のMermaidコードを生成してS3に保存し、タスクを完了する。",
+        "description": "生成されたCFn YAMLを解析し、TGW疎通図のMermaidコードを生成する操作を提供します。",
+        "x-amazon-bedrock-agent-description": "CFn YAMLファイルからルーティング構造を解析し、Mermaidコードを生成します。Lambda 2の実行後に使用してください。",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "bucket": {
+                    "type": "string",
+                    "description": "CFn YAMLファイルとマッピングファイルが格納されているS3バケット名（例: transitgateway-automation-rag）。"
+                  },
+                  "dynamic_prefix": {
+                    "type": "string",
+                    "description": "S3パスの動的なフォルダ名（例: hub_dev8-01）。CFn YAMLとマッピングファイルのパス構築に使用されます。"
+                  }
+                },
+                "required": [
+                  "bucket",
+                  "dynamic_prefix"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "MermaidコードがS3に保存され、次のレンダリング Lambda に引き継ぐためのS3キー情報を含む応答。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "inputKey": {
+                      "type": "string",
+                      "description": "【フル図】のMermaidコードが保存されているS3キー（Lambda 4のinputKeyに対応）。"
+                    },
+                    "diffInputKey": {
+                      "type": "string",
+                      "description": "【差分図】のMermaidコードが保存されているS3キー（Lambda 4のdiffInputKeyに対応）。差分がない場合は空値。"
+                    },
+                    "inputBucket": {
+                      "type": "string",
+                      "description": "Mermaidファイルが格納されているS3バケット名（Lambda 4のinputBucketに対応）。"
+                    },
+                    "s3_output_uri": {
+                      "type": "string",
+                      "description": "S3に保存されたMermaidコードのキー（フルMD）。"
+                    },
+                    "status_message": {
+                      "type": "string",
+                      "description": "処理結果の概要メッセージ。"
+                    }
+                  },
+                  "required": [
+                    "inputKey",
+                    "inputBucket",
+                    "s3_output_uri",
+                    "status_message"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

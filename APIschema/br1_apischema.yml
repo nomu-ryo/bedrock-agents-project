@@ -1,0 +1,71 @@
+openapi: 3.0.0
+info:
+  title: TGW Configuration Extraction API
+  version: '1.0'
+  description: |
+    このAPIは、S3上のExcel設計書からTransit Gateway (TGW) のアタッチメント設定を抽出し、
+    JSONL形式に変換してS3に保存します。後続のネットワーク自動構築プロセスに最適なデータを提供します。
+
+paths:
+  /extractTGWConfig:
+    post:
+      operationId: extractTGWConfig
+      summary: ExcelからTGW設定を抽出しJSONLとして保存
+      description: |
+        指定されたS3パスのExcelシートからTGWアタッチメントIDとアカウントIDを抽出し、
+        新しいアタッチメントに対して一意のルートテーブル（RTB）名を採番します。
+        抽出された設定はJSONL形式でS3に保存され、そのS3パスを返します。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                source_bucket:
+                  type: string
+                  description: 入力元Excelファイルが格納されているS3バケット名。
+                  default: sample-network-config-bucket
+                source_key:
+                  type: string
+                  description: 入力元ExcelファイルのS3オブジェクトキー。
+                  default: design-sheets/network-config-v1.xlsx
+                target_bucket:
+                  type: string
+                  description: 生成されたJSONLファイルを保存するS3バケット名。
+                  default: sample-network-config-bucket
+                target_key:
+                  type: string
+                  description: 生成されたJSONLファイルの保存先S3オブジェクトキー。
+                  default: output/tgw_config.jsonl
+                mapping_bucket:
+                  type: string
+                  description: 変換用マッピングテーブルが格納されているS3バケット名。
+                  default: sample-network-config-bucket
+                mapping_key:
+                  type: string
+                  description: 変換用マッピングテーブルのS3オブジェクトキー。
+                  default: master-data/mapping_table.jsonl
+                target_sheet_name:
+                  type: string
+                  description: Excelファイル内の解析対象シート名。
+                  default: TGW-Settings-Region-A
+              required: []
+                
+      responses:
+        '200':
+          description: 設定抽出とS3保存が正常に完了
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  response:
+                    type: string
+                    description: 処理結果の概要メッセージ。
+                  s3_config_key:
+                    type: string
+                    description: TGW設定データが保存されたS3のフルパス。
+                required:
+                  - response
+                  - s3_config_key
